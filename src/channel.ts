@@ -66,6 +66,12 @@ export const pwaChatPlugin: ChannelPlugin<ResolvedPwaChatAccount> = {
       pushOutboundMessage(to, text);
       return { channel: CHANNEL_ID, messageId: `pwa-${Date.now()}` } as any;
     },
+    sendMedia: async ({ to, text, mediaUrl }) => {
+      // PWA does not support media yet — deliver caption text as fallback
+      const fallback = [text, mediaUrl].filter(Boolean).join("\n");
+      pushOutboundMessage(to, fallback || "(media)");
+      return { channel: CHANNEL_ID, messageId: `pwa-${Date.now()}` } as any;
+    },
   },
   status: {
     buildChannelSummary: ({ snapshot }) => ({
