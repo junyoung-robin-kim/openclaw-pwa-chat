@@ -1,7 +1,7 @@
 import type { usePushNotification } from "../hooks/usePushNotification";
 import type { ConnectionState } from "../types";
 
-const BUILD_VERSION = "v2.5";
+const BUILD_VERSION = "v2.6";
 
 type PushHook = ReturnType<typeof usePushNotification>;
 
@@ -25,9 +25,7 @@ export function ChatHeader({
       ? null
       : push.pushState === "subscribed"
         ? "🔔"
-        : push.pushState === "denied"
-          ? "🔕"
-          : "🔕";
+        : "🔕";
 
   return (
     <header className="chat-header">
@@ -36,25 +34,24 @@ export function ChatHeader({
           className="icon-btn"
           onClick={onSessionsToggle}
           aria-label="Sessions"
-          style={{ fontSize: "14px" }}
           title="대화 목록"
         >
           ☰
         </button>
         <div className={`status-indicator ${connectionState === "connected" ? "connected" : ""}`} />
+      </div>
+      <div className="header-title">
+        OpenClaw <span className="header-version">{BUILD_VERSION}</span>
+      </div>
+      <div className="header-right">
         <button
           className="icon-btn"
           onClick={onDebugToggle}
           aria-label="Debug"
-          style={{ fontSize: "14px", opacity: showDebug ? 1 : 0.4 }}
+          style={{ opacity: showDebug ? 1 : 0.4 }}
         >
           🐛
         </button>
-      </div>
-      <div className="header-title">
-        OpenClaw <span style={{ fontSize: "0.6em", opacity: 0.5 }}>{BUILD_VERSION}</span>
-      </div>
-      <div className="header-right" style={{ display: "flex", gap: "4px" }}>
         {pushIcon && (
           <button
             className="icon-btn"
@@ -63,7 +60,6 @@ export function ChatHeader({
               else push!.subscribe();
             }}
             aria-label="Push notifications"
-            style={{ fontSize: "14px" }}
             title={push!.pushState === "subscribed" ? "알림 끄기" : "알림 켜기"}
           >
             {pushIcon}
