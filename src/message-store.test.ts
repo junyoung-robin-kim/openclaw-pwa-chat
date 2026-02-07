@@ -140,6 +140,69 @@ describe("message-store.ts — 메시지 영속성", () => {
       }
     });
 
+    it("mediaUrl이 있는 메시지는 mediaUrl 필드 포함하여 저장", () => {
+      const msg: StoredMessage = {
+        id: "msg-with-media",
+        text: "이미지가 포함된 메시지",
+        timestamp: Date.now(),
+        role: "assistant",
+        mediaUrl: "http://localhost:19999/api/media?path=/tmp/test.png",
+      };
+
+      appendMessage(testUserId, msg);
+
+      const history = readHistory(testUserId);
+      expect(history).toHaveLength(1);
+      expect(history[0].mediaUrl).toBe("http://localhost:19999/api/media?path=/tmp/test.png");
+    });
+
+    it("mediaUrl이 없는 메시지는 mediaUrl 필드 없음", () => {
+      const msg: StoredMessage = {
+        id: "msg-no-media",
+        text: "텍스트만 있는 메시지",
+        timestamp: Date.now(),
+        role: "user",
+      };
+
+      appendMessage(testUserId, msg);
+
+      const history = readHistory(testUserId);
+      expect(history).toHaveLength(1);
+      expect(history[0].mediaUrl).toBeUndefined();
+    });
+
+    it("같은 세션에 mediaUrl 있는/없는 메시지 혼합 저장", () => {
+      const msg1: StoredMessage = {
+        id: "msg-1",
+        text: "텍스트만",
+        timestamp: Date.now(),
+        role: "user",
+      };
+      const msg2: StoredMessage = {
+        id: "msg-2",
+        text: "이미지 포함",
+        timestamp: Date.now() + 1,
+        role: "assistant",
+        mediaUrl: "http://localhost:19999/api/media?path=/tmp/image.jpg",
+      };
+      const msg3: StoredMessage = {
+        id: "msg-3",
+        text: "다시 텍스트만",
+        timestamp: Date.now() + 2,
+        role: "user",
+      };
+
+      appendMessage(testUserId, msg1);
+      appendMessage(testUserId, msg2);
+      appendMessage(testUserId, msg3);
+
+      const history = readHistory(testUserId);
+      expect(history).toHaveLength(3);
+      expect(history[0].mediaUrl).toBeUndefined();
+      expect(history[1].mediaUrl).toBe("http://localhost:19999/api/media?path=/tmp/image.jpg");
+      expect(history[2].mediaUrl).toBeUndefined();
+    });
+
     it("특수문자가 포함된 userId 처리", () => {
       const specialUserId = "user@example.com/device#1";
       const safeName = specialUserId.replace(/[^a-zA-Z0-9_-]/g, "_");

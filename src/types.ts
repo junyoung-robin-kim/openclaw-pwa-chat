@@ -5,6 +5,7 @@ export type StoredMessage = {
   text: string;
   timestamp: number;
   role: "user" | "assistant";
+  mediaUrl?: string;
 };
 
 export type WsClientMessage =

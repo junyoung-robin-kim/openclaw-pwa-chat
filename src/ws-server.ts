@@ -115,13 +115,14 @@ function endStreaming(userId: string): void {
 }
 
 // ===== Public: push messages =====
-export function pushOutboundMessage(to: string, text: string): void {
+export function pushOutboundMessage(to: string, text: string, mediaUrl?: string): void {
   const userId = normalizeTarget(to);
   const msg: StoredMessage = {
     id: nextMessageId("out"),
     text,
     timestamp: Date.now(),
     role: "assistant",
+    ...(mediaUrl && { mediaUrl }),
   };
   appendMessage(userId, msg);
   broadcast(userId, { type: "message", msg } as any);

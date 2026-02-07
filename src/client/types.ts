@@ -4,6 +4,7 @@ export type StoredMessage = {
   timestamp: number;
   role: "user" | "assistant";
   images?: string[]; // data URLs for display
+  mediaUrl?: string; // server media URL (local file or HTTP URL)
 };
 
 export type WsClientMessage = {

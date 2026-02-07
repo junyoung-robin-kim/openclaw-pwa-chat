@@ -210,7 +210,7 @@ describe("channel.ts — 엣지 케이스 & 커버리지 향상", () => {
       expect(caps.chatTypes).toBeDefined();
       expect(caps.blockStreaming).toBe(true);
       expect(caps.reactions).toBe(false);
-      expect(caps.media).toBe(false);
+      expect(caps.media).toBe(true);
       expect(caps.threads).toBe(false);
       expect(caps.nativeCommands).toBe(false);
     });

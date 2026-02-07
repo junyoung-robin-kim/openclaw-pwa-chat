@@ -11,6 +11,18 @@ function formatTime(ts: number): string {
 }
 
 export function Message({ message }: Props) {
+  // Convert mediaUrl to displayable URL
+  let mediaSrc: string | undefined;
+  if (message.mediaUrl) {
+    if (message.mediaUrl.startsWith("http://") || message.mediaUrl.startsWith("https://")) {
+      // HTTP URL: use as-is
+      mediaSrc = message.mediaUrl;
+    } else {
+      // Local file: serve via /api/media
+      mediaSrc = `/api/media?path=${encodeURIComponent(message.mediaUrl)}`;
+    }
+  }
+
   return (
     <div className={`message ${message.role}-message`}>
       <div className="message-content">
@@ -19,6 +31,11 @@ export function Message({ message }: Props) {
             {message.images.map((src, i) => (
               <img key={i} src={src} alt={`첨부 ${i + 1}`} className="message-image" />
             ))}
+          </div>
+        )}
+        {mediaSrc && (
+          <div className="message-images">
+            <img src={mediaSrc} alt="미디어" className="message-image" />
           </div>
         )}
         <div className="message-text">

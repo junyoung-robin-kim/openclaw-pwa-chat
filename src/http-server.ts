@@ -115,6 +115,58 @@ export async function startHttpServer(config: ServerConfig): Promise<void> {
           return;
         }
 
+        // Media serving endpoint
+        if (url.pathname === "/api/media") {
+          if (!checkAuth(req, config.cfg)) {
+            jsonResponse(res, 401, { error: "Unauthorized" });
+            return;
+          }
+          const mediaPath = url.searchParams.get("path");
+          if (!mediaPath) {
+            jsonResponse(res, 400, { error: "Missing path parameter" });
+            return;
+          }
+
+          // Security: resolve absolute path and check it's a real file
+          const resolvedPath = path.resolve(mediaPath);
+          if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isFile()) {
+            res.writeHead(404);
+            res.end("Not Found");
+            return;
+          }
+
+          // Security: only allow image MIME types
+          const ext = path.extname(resolvedPath).toLowerCase();
+          const imageMimes: Record<string, string> = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+            ".svg": "image/svg+xml",
+          };
+          const mimeType = imageMimes[ext];
+          if (!mimeType) {
+            res.writeHead(403);
+            res.end("Forbidden: not an image file");
+            return;
+          }
+
+          fs.readFile(resolvedPath, (err, data) => {
+            if (err) {
+              res.writeHead(500);
+              res.end("Error reading file");
+              return;
+            }
+            res.writeHead(200, {
+              "Content-Type": mimeType,
+              "Cache-Control": "public, max-age=3600",
+            });
+            res.end(data);
+          });
+          return;
+        }
+
         // Session management
         if (url.pathname === "/api/sessions" && req.method === "GET") {
           if (!checkAuth(req, config.cfg)) {

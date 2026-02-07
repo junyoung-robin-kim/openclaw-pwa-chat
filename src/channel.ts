@@ -33,7 +33,7 @@ export const pwaChatPlugin: ChannelPlugin<ResolvedPwaChatAccount> = {
     chatTypes: ["direct"],
     reactions: false,
     threads: false,
-    media: false,
+    media: true,
     nativeCommands: false,
     blockStreaming: true,
   },
@@ -67,9 +67,7 @@ export const pwaChatPlugin: ChannelPlugin<ResolvedPwaChatAccount> = {
       return { channel: CHANNEL_ID, messageId: `pwa-${Date.now()}` } as any;
     },
     sendMedia: async ({ to, text, mediaUrl }) => {
-      // PWA does not support media yet — deliver caption text as fallback
-      const fallback = [text, mediaUrl].filter(Boolean).join("\n");
-      pushOutboundMessage(to, fallback || "(media)");
+      pushOutboundMessage(to, text || "(media)", mediaUrl);
       return { channel: CHANNEL_ID, messageId: `pwa-${Date.now()}` } as any;
     },
   },

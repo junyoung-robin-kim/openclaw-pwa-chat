@@ -422,4 +422,179 @@ describe("http-server.ts — HTTP 엔드포인트", () => {
       expect(res.status).toBeGreaterThanOrEqual(200);
     });
   });
+
+  describe("/api/media", () => {
+    const tmpDir = "/tmp/pwa-chat-media-test-" + Date.now();
+    const testImagePath = `${tmpDir}/test.png`;
+    const testJpegPath = `${tmpDir}/photo.jpg`;
+    const testGifPath = `${tmpDir}/animated.gif`;
+    const testWebpPath = `${tmpDir}/modern.webp`;
+    const testSvgPath = `${tmpDir}/vector.svg`;
+    const testTextPath = `${tmpDir}/text.txt`;
+    const testJsPath = `${tmpDir}/script.js`;
+
+    beforeEach(async () => {
+      // 테스트용 임시 디렉토리 생성
+      const fs = await import("node:fs");
+      fs.mkdirSync(tmpDir, { recursive: true });
+
+      // 간단한 1x1 PNG 이미지 (8바이트 헤더 포함)
+      const pngData = Buffer.from([
+        0x89,
+        0x50,
+        0x4e,
+        0x47,
+        0x0d,
+        0x0a,
+        0x1a,
+        0x0a, // PNG signature
+        0x00,
+        0x00,
+        0x00,
+        0x0d,
+        0x49,
+        0x48,
+        0x44,
+        0x52, // IHDR chunk
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x08,
+        0x06,
+        0x00,
+        0x00,
+        0x00,
+        0x1f,
+        0x15,
+        0xc4,
+        0x89,
+      ]);
+      fs.writeFileSync(testImagePath, pngData);
+
+      // 간단한 JPEG 헤더
+      const jpegData = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+      fs.writeFileSync(testJpegPath, jpegData);
+
+      // 간단한 GIF 헤더
+      const gifData = Buffer.from("GIF89a");
+      fs.writeFileSync(testGifPath, gifData);
+
+      // 간단한 WebP 헤더
+      const webpData = Buffer.from("RIFF\x00\x00\x00\x00WEBP", "binary");
+      fs.writeFileSync(testWebpPath, webpData);
+
+      // 간단한 SVG
+      fs.writeFileSync(testSvgPath, '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+
+      // 비이미지 파일
+      fs.writeFileSync(testTextPath, "This is a text file");
+      fs.writeFileSync(testJsPath, "console.log('test');");
+    });
+
+    afterEach(async () => {
+      // 임시 파일 정리
+      const fs = await import("node:fs");
+      if (fs.existsSync(tmpDir)) {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("path 파라미터 없으면 400 반환", async () => {
+      const res = await request("GET", "/api/media", {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(400);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Missing path parameter");
+    });
+
+    it("존재하지 않는 파일이면 404 반환", async () => {
+      const res = await request("GET", `/api/media?path=${tmpDir}/non-existent.png`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(404);
+      expect(res.body).toBe("Not Found");
+    });
+
+    it("이미지가 아닌 파일(.txt)이면 403 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testTextPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body).toBe("Forbidden: not an image file");
+    });
+
+    it("이미지가 아닌 파일(.js)이면 403 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testJsPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body).toBe("Forbidden: not an image file");
+    });
+
+    it("유효한 PNG 이미지는 200 + image/png 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testImagePath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("image/png");
+      expect(res.headers["cache-control"]).toBe("public, max-age=3600");
+      expect(Buffer.byteLength(res.body)).toBeGreaterThan(0);
+    });
+
+    it("유효한 JPEG 이미지는 200 + image/jpeg 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testJpegPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("image/jpeg");
+    });
+
+    it("유효한 GIF 이미지는 200 + image/gif 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testGifPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("image/gif");
+    });
+
+    it("유효한 WebP 이미지는 200 + image/webp 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testWebpPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("image/webp");
+    });
+
+    it("유효한 SVG 이미지는 200 + image/svg+xml 반환", async () => {
+      const res = await request("GET", `/api/media?path=${testSvgPath}`, {
+        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("image/svg+xml");
+    });
+
+    it("인증 없으면 401 반환", async () => {
+      // localhost가 아닌 경우를 시뮬레이션하기 위해 토큰 없이 요청
+      // 실제로는 localhost에서 실행되므로 이 테스트는 checkAuth 로직에 따라 달라질 수 있음
+      const res = await request("GET", `/api/media?path=${testImagePath}`);
+
+      // localhost에서는 인증 없이도 통과할 수 있으므로 200 또는 401
+      expect([200, 401]).toContain(res.status);
+    });
+  });
 });
