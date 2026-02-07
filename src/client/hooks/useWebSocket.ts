@@ -285,6 +285,9 @@ export function useWebSocket() {
         text,
         timestamp: Date.now(),
         role: "user",
+        ...(images && images.length > 0
+          ? { images: images.map((img) => `data:${img.mimeType};base64,${img.data}`) }
+          : {}),
       };
       setMessages((prev) => [...prev, localMsg]);
       setWaitingForReply(true);

@@ -14,6 +14,13 @@ export function Message({ message }: Props) {
   return (
     <div className={`message ${message.role}-message`}>
       <div className="message-content">
+        {message.images && message.images.length > 0 && (
+          <div className="message-images">
+            {message.images.map((src, i) => (
+              <img key={i} src={src} alt={`첨부 ${i + 1}`} className="message-image" />
+            ))}
+          </div>
+        )}
         <div className="message-text">
           {message.role === "assistant" ? (
             <ReactMarkdown>{message.text}</ReactMarkdown>

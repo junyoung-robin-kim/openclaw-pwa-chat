@@ -282,6 +282,21 @@ body {
   }
 }
 
+/* ===== Message Images ===== */
+.message-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0.5rem 0.5rem 0;
+}
+.message-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
 /* ===== Image Preview ===== */
 .image-preview-bar {
   display: flex;

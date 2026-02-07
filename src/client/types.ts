@@ -3,6 +3,7 @@ export type StoredMessage = {
   text: string;
   timestamp: number;
   role: "user" | "assistant";
+  images?: string[]; // data URLs for display
 };
 
 export type WsClientMessage = {
