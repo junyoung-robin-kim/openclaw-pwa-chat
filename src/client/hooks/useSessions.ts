@@ -39,7 +39,7 @@ export function useSessions() {
   }, []);
 
   const createSession = useCallback(() => {
-    const id = `default:${Date.now().toString(36)}`;
+    const id = Date.now().toString(36);
     switchSession(id);
     fetchSessions();
     return id;
