@@ -143,14 +143,17 @@ function normalizeTarget(target: string): string {
 }
 
 // ===== Inbound dispatch =====
+export type ImageContent = { type: "image"; data: string; mimeType: string };
+
 async function dispatchInbound(params: {
   text: string;
   userId: string;
   cfg: OpenClawConfig;
   accountId: string;
+  images?: ImageContent[];
   log?: { info: (msg: string) => void; error: (msg: string) => void };
 }): Promise<void> {
-  const { text, userId, cfg, accountId, log } = params;
+  const { text, userId, cfg, accountId, images, log } = params;
   const core = getRuntime();
 
   const fromAddress = `pwa-chat:${userId}`;
@@ -219,9 +222,10 @@ async function dispatchInbound(params: {
   let accumulatedText = "";
   let finalDelivered = false;
 
-  await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
+  await (core.channel.reply.dispatchReplyWithBufferedBlockDispatcher as any)({
     ctx: ctxPayload,
     cfg,
+    images,
     dispatcherOptions: {
       ...prefixOptions,
       deliver: async (payload: any, info: any) => {
@@ -413,12 +417,16 @@ function handleConnection(
       const text = parsed.text.trim();
       if (!text) return;
 
+      // Parse images if present
+      const images: ImageContent[] | undefined = (parsed as any).images;
+
       // Store user message
       const msg: StoredMessage = {
         id: nextMessageId("in"),
         text,
         timestamp: Date.now(),
         role: "user",
+        ...(images && images.length > 0 ? { hasImages: true, imageCount: images.length } : {}),
       };
       appendMessage(userId, msg);
 
@@ -426,8 +434,10 @@ function handleConnection(
       broadcast(userId, { type: "message", msg } as any);
 
       // Dispatch to agent
-      log?.info(`pwa-chat: dispatching message from ${userId}: "${text.slice(0, 50)}"`);
-      dispatchInbound({ text, userId, cfg, accountId, log })
+      log?.info(
+        `pwa-chat: dispatching message from ${userId}: "${text.slice(0, 50)}"${images ? ` (+${images.length} images)` : ""}`,
+      );
+      dispatchInbound({ text, userId, cfg, accountId, images, log })
         .then(() => {
           log?.info(`pwa-chat: dispatch completed for ${userId}`);
         })

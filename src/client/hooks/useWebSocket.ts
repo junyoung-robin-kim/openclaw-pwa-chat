@@ -278,7 +278,7 @@ export function useWebSocket() {
     };
   }, [doConnect, clearReconnectTimeout, clearTimers]);
 
-  const sendMessage = useCallback((text: string) => {
+  const sendMessage = useCallback((text: string, images?: { data: string; mimeType: string }[]) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const localMsg: StoredMessage = {
         id: `local-${Date.now()}`,
@@ -288,7 +288,15 @@ export function useWebSocket() {
       };
       setMessages((prev) => [...prev, localMsg]);
       setWaitingForReply(true);
-      wsRef.current.send(JSON.stringify({ type: "message", text }));
+      const payload: any = { type: "message", text };
+      if (images && images.length > 0) {
+        payload.images = images.map((img) => ({
+          type: "image" as const,
+          data: img.data,
+          mimeType: img.mimeType,
+        }));
+      }
+      wsRef.current.send(JSON.stringify(payload));
     }
   }, []);
 
