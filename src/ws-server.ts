@@ -225,7 +225,6 @@ async function dispatchInbound(params: {
   await (core.channel.reply.dispatchReplyWithBufferedBlockDispatcher as any)({
     ctx: ctxPayload,
     cfg,
-    images,
     dispatcherOptions: {
       ...prefixOptions,
       deliver: async (payload: any, info: any) => {
@@ -252,6 +251,7 @@ async function dispatchInbound(params: {
     },
     replyOptions: {
       onModelSelected,
+      images,
     },
   });
 
