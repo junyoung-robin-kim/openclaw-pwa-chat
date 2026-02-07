@@ -36,6 +36,41 @@ export function appendMessage(userId: string, msg: StoredMessage): void {
   fs.writeFileSync(storagePath(userId), JSON.stringify(msgs, null, 2));
 }
 
+export function listSessions(): {
+  sessionId: string;
+  messageCount: number;
+  lastTimestamp: number;
+}[] {
+  ensureStoreDir();
+  const files = fs.readdirSync(STORE_DIR).filter((f) => f.endsWith(".json"));
+  return files
+    .map((f) => {
+      const sessionId = f.replace(/\.json$/, "");
+      try {
+        const msgs = JSON.parse(
+          fs.readFileSync(path.join(STORE_DIR, f), "utf8"),
+        ) as StoredMessage[];
+        return {
+          sessionId,
+          messageCount: msgs.length,
+          lastTimestamp: msgs.length > 0 ? msgs[msgs.length - 1].timestamp : 0,
+        };
+      } catch {
+        return { sessionId, messageCount: 0, lastTimestamp: 0 };
+      }
+    })
+    .sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+}
+
+export function deleteSession(sessionId: string): boolean {
+  const p = storagePath(sessionId);
+  if (fs.existsSync(p)) {
+    fs.unlinkSync(p);
+    return true;
+  }
+  return false;
+}
+
 export function nextMessageId(prefix: string): string {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 6);

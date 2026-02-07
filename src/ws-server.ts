@@ -287,7 +287,9 @@ export function setupWebSocketServer(
     }
 
     wss!.handleUpgrade(req, socket, head, (ws) => {
-      const userId = url.searchParams.get("userId") ?? "default";
+      const baseUserId = url.searchParams.get("userId") ?? "default";
+      const sessionId = url.searchParams.get("sessionId") ?? "default";
+      const userId = sessionId === "default" ? baseUserId : `${baseUserId}:${sessionId}`;
       handleConnection(ws, userId, cfg, accountId, log, url.searchParams);
     });
   });

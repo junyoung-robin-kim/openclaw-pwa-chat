@@ -10,9 +10,16 @@ type Props = {
   onDebugToggle?: () => void;
   showDebug?: boolean;
   push?: PushHook;
+  onSessionsToggle?: () => void;
 };
 
-export function ChatHeader({ connectionState, onDebugToggle, showDebug, push }: Props) {
+export function ChatHeader({
+  connectionState,
+  onDebugToggle,
+  showDebug,
+  push,
+  onSessionsToggle,
+}: Props) {
   const pushIcon =
     !push || push.pushState === "unsupported"
       ? null
@@ -25,6 +32,15 @@ export function ChatHeader({ connectionState, onDebugToggle, showDebug, push }: 
   return (
     <header className="chat-header">
       <div className="header-left">
+        <button
+          className="icon-btn"
+          onClick={onSessionsToggle}
+          aria-label="Sessions"
+          style={{ fontSize: "14px" }}
+          title="대화 목록"
+        >
+          ☰
+        </button>
         <div className={`status-indicator ${connectionState === "connected" ? "connected" : ""}`} />
         <button
           className="icon-btn"

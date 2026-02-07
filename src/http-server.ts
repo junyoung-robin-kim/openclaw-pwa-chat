@@ -6,6 +6,7 @@ import * as http from "node:http";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkAuth, getGatewayToken } from "./auth.js";
+import { listSessions, deleteSession } from "./message-store.js";
 import { getVapidPublicKey, addSubscription, removeSubscription } from "./push.js";
 import { setupWebSocketServer, closeWebSocketServer } from "./ws-server.js";
 
@@ -111,6 +112,35 @@ export async function startHttpServer(config: ServerConfig): Promise<void> {
             return;
           }
           jsonResponse(res, 200, { ok: true, channel: "pwa-chat" });
+          return;
+        }
+
+        // Session management
+        if (url.pathname === "/api/sessions" && req.method === "GET") {
+          if (!checkAuth(req, config.cfg)) {
+            jsonResponse(res, 401, { error: "Unauthorized" });
+            return;
+          }
+          jsonResponse(res, 200, { sessions: listSessions() });
+          return;
+        }
+
+        if (url.pathname === "/api/sessions" && req.method === "DELETE") {
+          if (!checkAuth(req, config.cfg)) {
+            jsonResponse(res, 401, { error: "Unauthorized" });
+            return;
+          }
+          let body = "";
+          req.on("data", (c) => (body += c));
+          req.on("end", () => {
+            try {
+              const { sessionId } = JSON.parse(body);
+              const deleted = deleteSession(sessionId);
+              jsonResponse(res, 200, { ok: deleted });
+            } catch {
+              jsonResponse(res, 400, { error: "Invalid body" });
+            }
+          });
           return;
         }
 

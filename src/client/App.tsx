@@ -2,16 +2,20 @@ import { useState } from "react";
 import { ChatHeader } from "./components/ChatHeader";
 import { MessageInput } from "./components/MessageInput";
 import { MessageList } from "./components/MessageList";
+import { SessionDrawer } from "./components/SessionDrawer";
 import { usePushNotification } from "./hooks/usePushNotification";
+import { useSessions } from "./hooks/useSessions";
 import { useTheme } from "./hooks/useTheme";
 import { useViewportFix } from "./hooks/useViewportFix";
 import { useWebSocket } from "./hooks/useWebSocket";
 
 export function App() {
+  const sessionHook = useSessions();
   const { messages, streamingText, connectionState, waitingForReply, sendMessage, debugLog } =
-    useWebSocket();
+    useWebSocket(sessionHook.currentSessionId);
   const push = usePushNotification();
   const [showDebug, setShowDebug] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
   useTheme();
   useViewportFix();
 
@@ -22,7 +26,27 @@ export function App() {
         onDebugToggle={() => setShowDebug((v) => !v)}
         showDebug={showDebug}
         push={push}
+        onSessionsToggle={() => {
+          sessionHook.fetchSessions();
+          setShowSessions((v) => !v);
+        }}
       />
+      {showSessions && (
+        <SessionDrawer
+          sessions={sessionHook.sessions}
+          currentSessionId={sessionHook.currentSessionId}
+          onSwitch={(id) => {
+            sessionHook.switchSession(id);
+            setShowSessions(false);
+          }}
+          onCreate={() => {
+            sessionHook.createSession();
+            setShowSessions(false);
+          }}
+          onDelete={sessionHook.deleteSession}
+          onClose={() => setShowSessions(false)}
+        />
+      )}
       {showDebug && (
         <div
           style={{
@@ -57,7 +81,7 @@ export function App() {
           ))}
           <div style={{ color: "#ff0" }}>
             msgs={messages.length} stream={streamingText !== null ? "yes" : "no"} wait=
-            {waitingForReply ? "yes" : "no"}
+            {waitingForReply ? "yes" : "no"} session={sessionHook.currentSessionId}
           </div>
         </div>
       )}

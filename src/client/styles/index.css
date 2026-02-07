@@ -282,6 +282,86 @@ body {
   }
 }
 
+/* ===== Session Drawer ===== */
+.session-drawer {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.session-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.session-new-btn {
+  background: var(--bg-msg-user);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.session-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+}
+.session-list {
+  padding: 4px 0;
+}
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.session-item:hover {
+  background: var(--bg-primary);
+}
+.session-item.active {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--bg-msg-user);
+}
+.session-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.session-item-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.session-item-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.session-delete-btn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.4;
+  padding: 4px;
+}
+.session-delete-btn:hover {
+  opacity: 1;
+}
+.session-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
 /* ===== Message Images ===== */
 .message-images {
   display: flex;

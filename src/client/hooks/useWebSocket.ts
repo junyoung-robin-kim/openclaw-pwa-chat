@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-export function useWebSocket() {
+export function useWebSocket(sessionId: string = "default") {
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>("connecting");
@@ -79,7 +79,7 @@ export function useWebSocket() {
 
       const proto = location.protocol === "https:" ? "wss:" : "ws:";
       const token = window.__PWA_AUTH_TOKEN__ ?? "";
-      const params = new URLSearchParams({ userId: "default" });
+      const params = new URLSearchParams({ userId: "default", sessionId });
       if (token) params.set("token", token);
       if (connectionIdRef.current) {
         params.set("connection_id", connectionIdRef.current);
@@ -266,6 +266,14 @@ export function useWebSocket() {
 
   // Initial connect
   useEffect(() => {
+    // Reset state on session change
+    setMessages([]);
+    setStreamingText(null);
+    setWaitingForReply(false);
+    connectionIdRef.current = "";
+    serverSequenceRef.current = 0;
+    connectFailCountRef.current = 0;
+
     doConnect();
     return () => {
       clearReconnectTimeout();
@@ -276,7 +284,7 @@ export function useWebSocket() {
         wsRef.current = null;
       }
     };
-  }, [doConnect, clearReconnectTimeout, clearTimers]);
+  }, [sessionId, doConnect, clearReconnectTimeout, clearTimers]);
 
   const sendMessage = useCallback((text: string, images?: { data: string; mimeType: string }[]) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
