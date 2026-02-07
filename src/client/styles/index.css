@@ -127,7 +127,7 @@ body {
   display: flex;
   max-width: 80%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -166,6 +166,12 @@ body {
   line-height: 1.5;
   min-width: 0;
   max-width: 100%;
+}
+
+.message-text ol,
+.message-text ul {
+  padding-left: 1.5em;
+  list-style-position: inside;
 }
 
 /* Markdown inside messages */
