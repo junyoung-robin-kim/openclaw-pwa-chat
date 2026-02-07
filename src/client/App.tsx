@@ -26,6 +26,7 @@ export function App() {
         onDebugToggle={() => setShowDebug((v) => !v)}
         showDebug={showDebug}
         push={push}
+        sessionId={sessionHook.currentSessionId}
         onSessionsToggle={() => {
           sessionHook.fetchSessions();
           setShowSessions((v) => !v);

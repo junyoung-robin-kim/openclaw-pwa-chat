@@ -11,6 +11,7 @@ type Props = {
   showDebug?: boolean;
   push?: PushHook;
   onSessionsToggle?: () => void;
+  sessionId?: string;
 };
 
 export function ChatHeader({
@@ -19,7 +20,10 @@ export function ChatHeader({
   showDebug,
   push,
   onSessionsToggle,
+  sessionId,
 }: Props) {
+  const sessionLabel =
+    !sessionId || sessionId === "default" ? "기본 대화" : sessionId.replace(/^default:/, "");
   const pushIcon =
     !push || push.pushState === "unsupported"
       ? null
@@ -42,6 +46,7 @@ export function ChatHeader({
       </div>
       <div className="header-title">
         OpenClaw <span className="header-version">{BUILD_VERSION}</span>
+        <div className="header-session">{sessionLabel}</div>
       </div>
       <div className="header-right">
         <button
