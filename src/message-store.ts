@@ -36,16 +36,25 @@ export function appendMessage(userId: string, msg: StoredMessage): void {
   fs.writeFileSync(storagePath(userId), JSON.stringify(msgs, null, 2));
 }
 
-export function listSessions(): {
+export function listSessions(baseUserId = "default"): {
   sessionId: string;
   messageCount: number;
   lastTimestamp: number;
 }[] {
   ensureStoreDir();
   const files = fs.readdirSync(STORE_DIR).filter((f) => f.endsWith(".json"));
+  const safeBase = baseUserId.replace(/[^a-zA-Z0-9_-]/g, "_");
   return files
+    .filter((f) => {
+      const name = f.replace(/\.json$/, "");
+      // Match exact base (e.g. "default.json") or base_session (e.g. "default_mlc0b5ui.json")
+      return name === safeBase || name.startsWith(safeBase + "_");
+    })
     .map((f) => {
-      const sessionId = f.replace(/\.json$/, "");
+      const name = f.replace(/\.json$/, "");
+      // Convert userId-based filename back to sessionId
+      // "default" → "default", "default_mlc0b5ui" → "mlc0b5ui"
+      const sessionId = name === safeBase ? "default" : name.slice(safeBase.length + 1);
       try {
         const msgs = JSON.parse(
           fs.readFileSync(path.join(STORE_DIR, f), "utf8"),
@@ -62,8 +71,10 @@ export function listSessions(): {
     .sort((a, b) => b.lastTimestamp - a.lastTimestamp);
 }
 
-export function deleteSession(sessionId: string): boolean {
-  const p = storagePath(sessionId);
+export function deleteSession(sessionId: string, baseUserId = "default"): boolean {
+  // Convert sessionId back to userId for file lookup
+  const userId = sessionId === "default" ? baseUserId : `${baseUserId}:${sessionId}`;
+  const p = storagePath(userId);
   if (fs.existsSync(p)) {
     fs.unlinkSync(p);
     return true;
