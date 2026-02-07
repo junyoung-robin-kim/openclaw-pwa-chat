@@ -332,7 +332,7 @@ function handleConnection(
     const minBufferedSeq = buf.length > 0 ? buf[0].seq : state.sequence;
     const maxBufferedSeq = buf.length > 0 ? buf[buf.length - 1].seq : state.sequence;
 
-    if (incomingSeq >= minBufferedSeq && incomingSeq <= maxBufferedSeq) {
+    if (buf.length > 0 && incomingSeq >= minBufferedSeq && incomingSeq <= maxBufferedSeq) {
       connectionId = incomingConnectionId;
       shouldResync = false;
       log?.info(`pwa-chat: reconnect (connectionId=${connectionId}, seq=${incomingSeq})`);
@@ -423,13 +423,17 @@ function handleConnection(
       // Parse images if present
       const images: ImageContent[] | undefined = (parsed as any).images;
 
-      // Store user message
+      // Store user message (convert images to data URLs for persistence)
+      const imageDataUrls =
+        images && images.length > 0
+          ? images.map((img) => `data:${img.mimeType};base64,${img.data}`)
+          : undefined;
       const msg: StoredMessage = {
         id: nextMessageId("in"),
         text,
         timestamp: Date.now(),
         role: "user",
-        ...(images && images.length > 0 ? { hasImages: true, imageCount: images.length } : {}),
+        ...(imageDataUrls ? { images: imageDataUrls } : {}),
       };
       appendMessage(userId, msg);
 

@@ -79,7 +79,7 @@ function serveStaticFile(res: http.ServerResponse, urlPath: string, cfg: OpenCla
       const token = getGatewayToken(cfg);
       body = data
         .toString()
-        .replace("</head>", `<script>window.__PWA_AUTH_TOKEN__="${token}";</script></head>`);
+        .replace("</head>", `<script>window.__PWA_AUTH_TOKEN__=${JSON.stringify(token)};</script></head>`);
     }
 
     res.writeHead(200, {

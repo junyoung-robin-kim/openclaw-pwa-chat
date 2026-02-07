@@ -8,6 +8,7 @@ function getAuthToken(): string {
 
 async function getVapidPublicKey(): Promise<string> {
   const res = await fetch("/api/push/vapid-public-key");
+  if (!res.ok) throw new Error(`VAPID key fetch failed: ${res.status}`);
   const data = await res.json();
   return data.publicKey;
 }
@@ -62,7 +63,7 @@ export function usePushNotification() {
 
       // Register with server
       const token = getAuthToken();
-      await fetch("/api/push/subscribe", {
+      const subRes = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,6 +74,7 @@ export function usePushNotification() {
           subscription: sub.toJSON(),
         }),
       });
+      if (!subRes.ok) throw new Error(`Subscribe failed: ${subRes.status}`);
 
       setPushState("subscribed");
     } catch (err) {
@@ -90,7 +92,7 @@ export function usePushNotification() {
         await sub.unsubscribe();
 
         const token = getAuthToken();
-        await fetch("/api/push/unsubscribe", {
+        const unsubRes = await fetch("/api/push/unsubscribe", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -98,6 +100,7 @@ export function usePushNotification() {
           },
           body: JSON.stringify({ userId: "default", endpoint }),
         });
+        if (!unsubRes.ok) throw new Error(`Unsubscribe failed: ${unsubRes.status}`);
       }
       setPushState("prompt");
     } catch (err) {

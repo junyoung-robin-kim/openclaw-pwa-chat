@@ -22,10 +22,11 @@ export function useSessions() {
       const res = await fetch("/api/sessions", {
         headers: token ? { "X-Auth-Token": token } : {},
       });
+      if (!res.ok) return;
       const data = await res.json();
       setSessions(data.sessions || []);
     } catch {
-      // ignore
+      console.warn("[pwa-chat] failed to fetch sessions");
     }
   }, []);
 
@@ -47,21 +48,28 @@ export function useSessions() {
 
   const deleteSession = useCallback(
     async (sessionId: string) => {
-      const token = getAuthToken();
-      await fetch("/api/sessions", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "X-Auth-Token": token } : {}),
-        },
-        body: JSON.stringify({ sessionId }),
-      });
-      if (currentSessionId === sessionId) {
-        switchSession("default");
+      try {
+        const token = getAuthToken();
+        const res = await fetch("/api/sessions", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "X-Auth-Token": token } : {}),
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+        if (!res.ok) return;
+        // Read from localStorage to avoid stale closure on currentSessionId
+        const current = localStorage.getItem("pwa-chat-session") || "default";
+        if (current === sessionId) {
+          switchSession("default");
+        }
+        fetchSessions();
+      } catch {
+        console.warn("[pwa-chat] failed to delete session");
       }
-      fetchSessions();
     },
-    [currentSessionId, switchSession, fetchSessions],
+    [switchSession, fetchSessions],
   );
 
   return { sessions, currentSessionId, switchSession, createSession, deleteSession, fetchSessions };

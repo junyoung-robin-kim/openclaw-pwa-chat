@@ -7,15 +7,17 @@ export type StoredMessage = {
   mediaUrl?: string; // server media URL (local file or HTTP URL)
 };
 
-export type WsClientMessage = {
-  type: "message";
-  text: string;
-};
+export type WsClientMessage =
+  | { type: "message"; text: string }
+  | { type: "ping" }
+  | { type: "resync" };
 
 export type WsServerMessage =
-  | { type: "history"; messages: StoredMessage[] }
-  | { type: "message"; msg: StoredMessage }
-  | { type: "streaming"; text: string }
-  | { type: "streaming_end" };
+  | { type: "hello"; connectionId: string; seq: number }
+  | { type: "pong"; seq?: number }
+  | { type: "history"; messages: StoredMessage[]; seq: number }
+  | { type: "message"; msg: StoredMessage; seq: number }
+  | { type: "streaming"; text: string; seq: number }
+  | { type: "streaming_end"; seq: number };
 
 export type ConnectionState = "connecting" | "connected" | "disconnected";

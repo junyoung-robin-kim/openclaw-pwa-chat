@@ -6,6 +6,7 @@ export type StoredMessage = {
   timestamp: number;
   role: "user" | "assistant";
   mediaUrl?: string;
+  images?: string[]; // data URLs for inline images
 };
 
 export type WsClientMessage =
