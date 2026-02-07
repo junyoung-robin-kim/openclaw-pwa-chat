@@ -1,3 +1,4 @@
+// @ts-ignore — no type declarations for web-push
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";

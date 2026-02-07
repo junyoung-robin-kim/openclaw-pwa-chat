@@ -205,7 +205,7 @@ export function useWebSocket(sessionId: string = "default") {
         // onclose will fire after onerror
       };
     };
-  }, [clearTimers, scheduleReconnect]);
+  }, [sessionId, clearTimers, scheduleReconnect]);
 
   // Ping helper
   function startPing(ws: WebSocket) {
@@ -266,7 +266,14 @@ export function useWebSocket(sessionId: string = "default") {
 
   // Initial connect
   useEffect(() => {
-    // Reset state on session change
+    // Close existing connection & reset state on session change
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    clearReconnectTimeout();
+    clearTimers();
     setMessages([]);
     setStreamingText(null);
     setWaitingForReply(false);
@@ -274,8 +281,10 @@ export function useWebSocket(sessionId: string = "default") {
     serverSequenceRef.current = 0;
     connectFailCountRef.current = 0;
 
-    doConnect();
+    // Small delay to ensure doConnectRef is updated with new sessionId
+    const t = setTimeout(() => doConnect(), 50);
     return () => {
+      clearTimeout(t);
       clearReconnectTimeout();
       clearTimers();
       if (wsRef.current) {
