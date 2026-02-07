@@ -1,0 +1,38 @@
+{
+  "name": "@openclaw/pwa-chat",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.node.json && vite build",
+    "build:backend": "tsc -p tsconfig.node.json",
+    "build:client": "vite build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:watch": "vitest",
+    "tui": "node dist/tui.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@types/ws": "^8.5.13",
+    "@vitejs/plugin-react": "^4.3.4",
+    "openclaw": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^9.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

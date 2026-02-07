@@ -1,0 +1,13 @@
+{
+  "id": "pwa-chat",
+  "channels": ["pwa-chat"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "port": { "type": "number" },
+      "host": { "type": "string" },
+      "authToken": { "type": "string" }
+    }
+  }
+}
