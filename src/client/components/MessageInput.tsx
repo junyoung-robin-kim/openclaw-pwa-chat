@@ -6,8 +6,40 @@ type Props = {
   onSend: (text: string, images?: ImageAttachment[]) => void;
 };
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_BASE64_SIZE = 4 * 1024 * 1024; // 4MB base64 (< 5MB API limit)
+const MAX_DIMENSION = 2048;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+function resizeImage(file: File): Promise<{ data: string; mimeType: string; dataUrl: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const scale = MAX_DIMENSION / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      let quality = 0.85;
+      let dataUrl = canvas.toDataURL("image/jpeg", quality);
+      // Reduce quality until under limit
+      while (dataUrl.length * 0.75 > MAX_BASE64_SIZE && quality > 0.3) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL("image/jpeg", quality);
+      }
+      const base64 = dataUrl.split(",")[1];
+      resolve({ data: base64, mimeType: "image/jpeg", dataUrl });
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 export function MessageInput({ onSend }: Props) {
   const [text, setText] = useState("");
@@ -50,21 +82,16 @@ export function MessageInput({ onSend }: Props) {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(async (file) => {
       if (!ACCEPTED_TYPES.includes(file.type)) return;
-      if (file.size > MAX_IMAGE_SIZE) {
-        alert("이미지 크기는 5MB 이하여야 합니다.");
-        return;
-      }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const base64 = dataUrl.split(",")[1];
-        setImages((prev) => [...prev, { data: base64, mimeType: file.type }]);
-        setPreviews((prev) => [...prev, dataUrl]);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const result = await resizeImage(file);
+        setImages((prev) => [...prev, { data: result.data, mimeType: result.mimeType }]);
+        setPreviews((prev) => [...prev, result.dataUrl]);
+      } catch {
+        alert("이미지를 처리할 수 없습니다.");
+      }
     });
 
     // Reset input so same file can be selected again

@@ -1,7 +1,7 @@
 import type { usePushNotification } from "../hooks/usePushNotification";
 import type { ConnectionState } from "../types";
 
-const BUILD_VERSION = "v2.3-push";
+const BUILD_VERSION = "v2.4-image";
 
 type PushHook = ReturnType<typeof usePushNotification>;
 
